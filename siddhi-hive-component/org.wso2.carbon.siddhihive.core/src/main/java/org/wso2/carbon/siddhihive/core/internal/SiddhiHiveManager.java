@@ -27,6 +27,7 @@ import org.wso2.carbon.siddhihive.core.configurations.Context;
 import org.wso2.carbon.siddhihive.core.configurations.StreamDefinitionExt;
 import org.wso2.carbon.siddhihive.core.headerprocessor.HeaderHandler;
 import org.wso2.carbon.siddhihive.core.internal.ds.SiddhiHiveValueHolder;
+import org.wso2.carbon.siddhihive.core.internal.exception.SiddhiHiveStreamDefinitionException;
 import org.wso2.carbon.siddhihive.core.selectorprocessor.QuerySelectorProcessor;
 import org.wso2.carbon.siddhihive.core.tablecreation.CSVTableCreator;
 import org.wso2.carbon.siddhihive.core.tablecreation.CassandraTableCreator;
@@ -207,7 +208,12 @@ public class SiddhiHiveManager {
         List<String> streamDefs = new ArrayList<String>();
         for (Map.Entry entry : streamDefinitionMap.entrySet()) {
             if (isInputStream((StreamDefinitionExt) entry.getValue())) {
-                streamDefs.add(getOriginalStreamDefinition((StreamDefinitionExt) entry.getValue()));
+	            try {
+		            streamDefs.add(getOriginalStreamDefinition((StreamDefinitionExt) entry.getValue()));
+	            } catch (SiddhiHiveStreamDefinitionException e) {
+		            e.printStackTrace();
+		            log.error("Obtianing OriginalStreamDefinition failed",e);
+	            }
             }
         }
         SiddhiHiveToolBoxCreator siddhiHiveToolBoxCreator = new SiddhiHiveToolBoxCreator(streamDefs, hiveQuery);
@@ -259,7 +265,8 @@ public class SiddhiHiveManager {
 	                               equals(streamDefinitionExt.getStreamDefinition().getStreamId());
     }
 
-    private String getOriginalStreamDefinition(StreamDefinitionExt streamDefinitionExt) {
+    private String getOriginalStreamDefinition(StreamDefinitionExt streamDefinitionExt)
+		    throws SiddhiHiveStreamDefinitionException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         String streamId = streamDefinitionExt.getFullQualifiedStreamID();
         org.wso2.carbon.databridge.commons.StreamDefinition streamDefinition = null;
@@ -267,7 +274,13 @@ public class SiddhiHiveManager {
             streamDefinition = SiddhiHiveValueHolder.getInstance().getEventStreamService().getStreamDefinition(streamId, tenantId);
         } catch (EventStreamConfigurationException e) {
             e.printStackTrace();
+	        log.error("Error in obtaining Stream Definition",e);
+	        throw new SiddhiHiveStreamDefinitionException("Error in obtaining Stream Definition", e);
+	    }catch (Throwable e) {
+	        log.error("Failed to obtain Stream Definition.", e);
+
         }
+
         if (streamDefinition != null) {
             return streamDefinition.toString();
         } else {

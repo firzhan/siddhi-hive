@@ -20,6 +20,8 @@
 
 package org.wso2.carbon.siddhihive.core.utils;
 
+import org.apache.log4j.Logger;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -31,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 
 public class CronExpressionCreator {
 
+	private static final Logger log = Logger.getLogger(CronExpressionCreator.class);
     private int months = 0;
     private int days = 0;
 	private int seconds = 0;
@@ -90,6 +93,7 @@ public class CronExpressionCreator {
     private void populateData(long millis) {
         params = new ArrayList<Integer>();
         if (millis < 0) {
+			log.error("Duration must be greater than zero");
             throw new IllegalArgumentException("Duration must be greater than zero!");
         }
         days = (int) TimeUnit.MILLISECONDS.toDays(millis);

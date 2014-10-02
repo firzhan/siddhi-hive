@@ -22,6 +22,7 @@ package org.wso2.carbon.siddhihive.core.utils;
 
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -31,6 +32,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SiddhiHiveToolBoxCreator {
+
+	private static final Logger log = Logger.getLogger(SiddhiHiveToolBoxCreator.class);
     private List<String> streamDefList;
     private String script;
 
@@ -119,6 +122,7 @@ public class SiddhiHiveToolBoxCreator {
 
         } catch (IOException e) {
             e.printStackTrace();
+	        log.error("File writing operation failed", e);
         }
     }
 }

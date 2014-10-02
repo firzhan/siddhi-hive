@@ -21,6 +21,8 @@
 package org.wso2.carbon.siddhihive.core.utils;
 
 
+import org.apache.log4j.Logger;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -35,9 +37,10 @@ import java.util.zip.ZipOutputStream;
  */
 public class ZipppingUtil {
 
+	private static final Logger log = Logger.getLogger(ZipppingUtil.class);
+
     List<String> fileList;
-    private String outputZipFile;
-    private File sourceFolder;
+	private File sourceFolder;
 
     public ZipppingUtil() {
         fileList = new ArrayList<String>();
@@ -45,8 +48,7 @@ public class ZipppingUtil {
 
     public void zip(String zipFile, File sourceFile) {
         sourceFolder = sourceFile;
-        outputZipFile = zipFile;
-        generateFileList(sourceFile);
+	    generateFileList(sourceFile);
         byte[] buffer = new byte[1024];
 
         try {
@@ -75,6 +77,7 @@ public class ZipppingUtil {
             System.out.println("Done");
         } catch (IOException ex) {
             ex.printStackTrace();
+	        log.error("Toolbox zipping operation failed", ex);
         }
     }
 
