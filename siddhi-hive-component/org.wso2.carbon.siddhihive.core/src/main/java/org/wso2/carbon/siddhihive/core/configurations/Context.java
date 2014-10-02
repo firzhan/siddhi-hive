@@ -1,13 +1,33 @@
+/*
+ *
+ *  *
+ *  *  * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  *  *
+ *  *  * Licensed under the Apache License, Version 2.0 (the "License");
+ *  *  * you may not use this file except in compliance with the License.
+ *  *  * You may obtain a copy of the License at
+ *  *  *
+ *  *  *      http://www.apache.org/licenses/LICENSE-2.0
+ *  *  *
+ *  *  * Unless required by applicable law or agreed to in writing, software
+ *  *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  *  * See the License for the specific language governing permissions and
+ *  *  * limitations under the License.
+ *  *
+ *
+ */
+
 package org.wso2.carbon.siddhihive.core.configurations;
 
-import org.wso2.carbon.siddhihive.core.utils.enums.*;
+import org.wso2.carbon.siddhihive.core.utils.enums.ProcessingLevel;
+import org.wso2.carbon.siddhihive.core.utils.enums.SelectorProcessingLevel;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/*
-Class to hold context information needed in processing
-queries.
+/**
+ * Class to hold context information needed in processing  queries.
  */
 public class Context {
 
@@ -20,16 +40,10 @@ public class Context {
 
     //enums
     private ProcessingLevel processingLevel;
-    private InputStreamProcessingLevel inputStreamProcessingLevel ;
-    private SelectorProcessingLevel selectorProcessingLevel;
-    private WindowStreamProcessingLevel windowStreamProcessingLevel;
-    private WindowProcessingLevel windowProcessingLevel;
+	private SelectorProcessingLevel selectorProcessingLevel;
 
-    private Boolean isScheduled = false;
-
-    private int timeStampCounter = 0;
+	private int timeStampCounter = 0;
     private int limitCounter = 0;
-
 
 
     public Context(){
@@ -39,57 +53,36 @@ public class Context {
         referenceIDAliasMap = new ConcurrentHashMap<String, String>();
 
         processingLevel = ProcessingLevel.NONE;
-        inputStreamProcessingLevel = InputStreamProcessingLevel.NONE;
-        selectorProcessingLevel = SelectorProcessingLevel.NONE;
-        windowStreamProcessingLevel = WindowStreamProcessingLevel.NONE;
-        windowProcessingLevel = WindowProcessingLevel.NONE;
+	    selectorProcessingLevel = SelectorProcessingLevel.NONE;
 
     }
 
-    public Boolean getIsScheduled() {
-        return isScheduled;
-    }
-
-    public void setIsScheduled(Boolean isScheduled) {
-        this.isScheduled = isScheduled;
-    }
-
-//    public void addCachedValues(String cachedID, String cachedValue) {
-//        this.cachedValuesMap.put(cachedID,cachedValue);
-//    }
-//
-//    public String getCachedValues(String cachedID ) {
-//
-//        String cachedValue = cachedValuesMap.get(cachedID);
-//
-//        if(  cachedValue != null){
-//            return cachedValue;
-//        }else{
-//
-//            if( cachedValuesMap.containsValue(cachedID) )
-//                return cachedID;
-//        }
-//        return null;
-//    }
-
+	/**
+	 * Sub query Identifiers are used as a variable to assign the entire query in a complicated hive query.
+	 *
+	 * @return returns an auto increment variable to be assigned to the entire sub query. later on
+	 *          on another place these variables can be used to represent that particular query.
+	 */
     public String generateSubQueryIdentifier(){
-
-        String subQueryIdentifier = "subq" + String.valueOf(++subQueryCounter);
-
-        return subQueryIdentifier;
+        return  "subq" + String.valueOf(++subQueryCounter);
     }
 
     public String generatePreviousSubQueryIdentifier(){
-
-        String subQueryIdentifier = "subq" + String.valueOf(subQueryCounter - 1);
-
-        return subQueryIdentifier;
+        return "subq" + String.valueOf(subQueryCounter - 1);
     }
 
     public String getSelectionAttributeRename(String rename) {
         return this.selectionAttributeRenameMap.get(rename);
     }
 
+	/**
+	 * In siddhi query selection related sql syntax are used with AS keyword. Hive doesn't support that functionality.
+	 * But later on the siddhi query, it refers the syntax with the new name ( Value used after AS  ).
+	 * In order to track them we are using this map.
+	 *
+	 * @param rename          Value occurs after AS
+	 * @param selectionString Siddhi string denoted by  AS keyword
+	 */
     public void addSelectionAttributeRename(String rename, String selectionString) {
         this.selectionAttributeRenameMap.put(rename, selectionString);
     }
@@ -99,10 +92,7 @@ public class Context {
     }
 
     public void setProcessingLevel(ProcessingLevel processingLevel) {
-
-
-
-        this.processingLevel = processingLevel;
+	    this.processingLevel = processingLevel;
     }
 
 
@@ -114,36 +104,8 @@ public class Context {
         this.selectorProcessingLevel = selectorProcessingLevel;
     }
 
-    public InputStreamProcessingLevel getInputStreamProcessingLevel() {
-        return inputStreamProcessingLevel;
-    }
-
-    public void setInputStreamProcessingLevel(InputStreamProcessingLevel inputStreamProcessingLevel) {
-        this.inputStreamProcessingLevel = inputStreamProcessingLevel;
-    }
-
-    public WindowStreamProcessingLevel getWindowStreamProcessingLevel() {
-        return windowStreamProcessingLevel;
-    }
-
-    public void setWindowStreamProcessingLevel(WindowStreamProcessingLevel windowStreamProcessingLevel) {
-        this.windowStreamProcessingLevel = windowStreamProcessingLevel;
-    }
-
-    public WindowProcessingLevel getWindowProcessingLevel() {
-        return windowProcessingLevel;
-    }
-
-    public void setWindowProcessingLevel(WindowProcessingLevel windowProcessingLevel) {
-        this.windowProcessingLevel = windowProcessingLevel;
-    }
-
-
     public String getReferenceIDAlias(String referenceID) {
-
-        String alias = referenceIDAliasMap.get(referenceID);
-
-        return alias;
+        return referenceIDAliasMap.get(referenceID);
     }
 
     public void setReferenceIDAlias(String referenceID, String alias) {
@@ -168,19 +130,14 @@ public class Context {
         referenceIDAliasMap.clear();
 
         processingLevel = ProcessingLevel.NONE;
-        inputStreamProcessingLevel = InputStreamProcessingLevel.NONE;
-        selectorProcessingLevel = SelectorProcessingLevel.NONE;
-        windowStreamProcessingLevel = WindowStreamProcessingLevel.NONE;
-        windowProcessingLevel = WindowProcessingLevel.NONE;
+	    selectorProcessingLevel = SelectorProcessingLevel.NONE;
 
     }
 
 
     public int generateLimitCounter(boolean generateNew){
-
         if(!generateNew)
             return limitCounter;
-
         return ++limitCounter;
     }
 }

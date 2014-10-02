@@ -1,7 +1,26 @@
+/*
+ *
+ *  *
+ *  *  * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  *  *
+ *  *  * Licensed under the Apache License, Version 2.0 (the "License");
+ *  *  * you may not use this file except in compliance with the License.
+ *  *  * You may obtain a copy of the License at
+ *  *  *
+ *  *  *      http://www.apache.org/licenses/LICENSE-2.0
+ *  *  *
+ *  *  * Unless required by applicable law or agreed to in writing, software
+ *  *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  *  * See the License for the specific language governing permissions and
+ *  *  * limitations under the License.
+ *  *
+ *
+ */
+
 package org.wso2.carbon.siddhihive.core.handler;
 
 import org.wso2.carbon.siddhihive.core.configurations.Context;
-import org.wso2.carbon.siddhihive.core.internal.SiddhiHiveManager;
 import org.wso2.carbon.siddhihive.core.internal.StateManager;
 import org.wso2.carbon.siddhihive.core.utils.Constants;
 import org.wso2.carbon.siddhihive.core.utils.enums.ProcessingLevel;
@@ -13,7 +32,7 @@ import org.wso2.siddhi.query.api.expression.Variable;
 import org.wso2.siddhi.query.api.expression.constant.*;
 
 /**
- * Created by Firzhan on 6/2/14.
+ *  Class responsible for handling AND, BOOLEAN, OR and NOT condition
  */
 public class ConditionHandler {
 
@@ -22,12 +41,18 @@ public class ConditionHandler {
 
     }
 
+	/**
+	 * Process the conditions in a recursive manner and generates a hive query for that condition
+	 *
+	 * @param condition Condition object to be processed to obtain the hive String
+	 * @return          Condition Hive script
+	 */
     public String processCondition(Condition condition) {
-
         String handleCondition = " ";
 
-        if (condition == null)
-            return " ";
+        if (condition == null) {
+	        return " ";
+        }
 
         if (condition instanceof Compare) {
             handleCondition += handleCompareCondition((Compare) condition);
@@ -36,11 +61,7 @@ public class ConditionHandler {
             String rightCondition = processCondition(((AndCondition) condition).getRightCondition());
             handleCondition += Constants.SPACE + Constants.OPENING_BRACT + leftCondition + Constants.CLOSING_BRACT + Constants.SPACE + Constants.AND + Constants.SPACE + Constants.OPENING_BRACT + rightCondition + Constants.CLOSING_BRACT + Constants.SPACE;
         } else if (condition instanceof BooleanCondition) {
-            //do
-        } else if (condition instanceof InCondition) {
-            //do
-        } else if (condition instanceof NotCondition) {
-            System.out.println("Accessed Not Condition");
+            processCondition(condition);
         } else if (condition instanceof OrCondition) {
             String leftCondition = processCondition(((OrCondition) condition).getLeftCondition());
             String rightCondition = processCondition(((OrCondition) condition).getRightCondition());
@@ -51,21 +72,26 @@ public class ConditionHandler {
 
     }
 
+	/**
+	 * Handles the comparision conditions by dividing it in to left and right expressions
+	 * @param compare Compare object to be processed to obtain the hive String
+	 * @return        Comparison Hive script
+	 */
     public String handleCompareCondition(Compare compare) {
-
         String leftExpressiveValue = handleCompareExpression(compare.getLeftExpression());
         String rightExpressiveValue = handleCompareExpression(compare.getRightExpression());
-
-
         String operatorString = getOperator(compare.getOperator());
 
         return " " + leftExpressiveValue + "  " + operatorString + "  " + rightExpressiveValue;
-
     }
 
+	/**
+	 * Handles the comparision of expressions
+	 * @param expression expression object to be processed to obtain the hive String
+	 * @return           expression Hive script
+	 */
 
     public String handleCompareExpression(Expression expression) {
-
         String expressionValue = " ";
 
         if (expression instanceof Variable) {
@@ -92,139 +118,51 @@ public class ConditionHandler {
                 expressionValue = longConstant.getValue().toString();
             }else if (expression instanceof StringConstant) {
                 StringConstant stringConstant = (StringConstant) expression;
-                expressionValue = "\""+ stringConstant.getValue().toString() + "\" ";
+                expressionValue = "\""+ stringConstant.getValue() + "\" ";
             }
         }
 
         return expressionValue;
     }
 
+	/**
+	 * Handles the Variable of siddhi expressions and generate hive scripts
+	 *
+	 * @param variable  Variable object to be processed to obtain the hive String
+	 * @return          variable hive script
+	 */
     public String handleVariable(Variable variable) {
-        // return (variable.getStreaimId() != null ? (siddhiHiveManager.getStreamReferenceID(variable.getStreamId()) + ".") : variable.getStreamId()) + variable.getAttributeName();
-
         String variableName ="";
-        String streamID = "";
-
         Context context = StateManager.getContext();
 
-        if( (context.getProcessingLevel() == ProcessingLevel.SELECTOR ) && (context.getSelectorProcessingLevel() == SelectorProcessingLevel.HAVING) ){
+        if( (context.getProcessingLevel() == ProcessingLevel.SELECTOR ) &&
+                (context.getSelectorProcessingLevel() == SelectorProcessingLevel.HAVING) ){
 
-                variableName = context.getSelectionAttributeRename(variable.getAttributeName());
-
-                if (variableName == null)
-                    variableName = variable.getAttributeName();
-
-        }else{
-
-//            if(siddhiHiveManager.getCachedValues("STREAM_ID") != null )
-//                streamID = siddhiHiveManager.getCachedValues("STREAM_ID");
-
-//            if(siddhiHiveManager.getReferenceIDAlias("STREAM_ID") != null )
-//                streamID = siddhiHiveManager.getReferenceIDAlias("STREAM_ID");
-//
-//            if(streamID.isEmpty() == false){
-//                variableName = streamID + ".";
-//            }else{
-//
-//                if(variable.getStreamId() != null){
-//                    variableName = variable.getStreamId();
-//                    variableName +=".";
-//                }
-//            }
-
-            if(variable.getStreamId() != null){
-                if (context.getReferenceIDAlias(variable.getStreamId()) != null) {
-                    variableName = context.getReferenceIDAlias(variable.getStreamId()) + ".";
-                } else {
-                    variableName = variable.getStreamId() + ".";
-                }
+            variableName = context.getSelectionAttributeRename(variable.getAttributeName());
+            if (variableName == null) {
+	            variableName = variable.getAttributeName();
             }
-
-
-
+        }else{
+            if(variable.getStreamId() != null){
+	            if (context.getReferenceIDAlias(variable.getStreamId()) != null) {
+	                variableName = context.getReferenceIDAlias(variable.getStreamId()) + ".";
+	            } else {
+	                variableName = variable.getStreamId() + ".";
+	            }
+            }
             variableName += variable.getAttributeName();
         }
 
         StateManager.setContext(context);
-
-//
-//        if ( siddhiHiveManager.getProcessingLevel() == ProcessingLevel.SELECTOR_HAVING){
-//            variableName = siddhiHiveManager.getSelectionAttributeRename(variable.getAttributeName());
-//        }
-//        else{
-//            if(siddhiHiveManager.getCachedValues("STREAM_ID") != null )
-//                streamID = siddhiHiveManager.getCachedValues("STREAM_ID");
-//
-//            if(streamID.isEmpty() == false){
-//                variableName = streamID;
-//            }else{
-//
-//                if(variable.getStreamId() != null){
-//                    variableName = variable.getStreamId();
-//                    variableName +=".";
-//                }
-//                variableName += variable.getAttributeName();
-//            }
-//        }
-//
-//        if (variableName == null){
-//            variableName = variable.getAttributeName();
-//        }
-
-//
-//        if(variable.getStreamId() != null){
-//
-//
-//        }
-//        else{
-//
-//        }
-
-//        if(variable.getStreamId() != null){
-//
-//          if(siddhiHiveManager.getWindowProcessingState() == WindowProcessingState.WINDOW_PROCESSED){
-//
-//              ProcessingLevel processingMode = siddhiHiveManager.getProcessingLevel();
-//              if(processingMode == ProcessingLevel.SELECTOR){
-//                  variableName = siddhiHiveManager.getCachedValues(variable.getStreamId());
-//              }
-//
-//          }
-//          else if(siddhiHiveManager.getWindowProcessingState() == WindowProcessingState.WINDOW_PROCESSING){
-//
-//              ProcessingLevel processingMode = siddhiHiveManager.getProcessingLevel();
-//              if(processingMode == ProcessingLevel.SELECTOR_WHERE){
-//                  variableName = siddhiHiveManager.getCachedValues(variable.getStreamId());
-//              }
-//          }
-//          else{
-//                if (siddhiHiveManager.getStreamReferenceID(variable.getStreamId()) != null ){
-//                    variableName =  siddhiHiveManager.getStreamReferenceID(variable.getStreamId());
-//                }
-//                else {
-//                    variableName = variable.getStreamId();
-//                }
-//            }
-//
-//            variableName += "."  ;
-//            variableName += variable.getAttributeName();
-//        }
-//        else{
-//            //if this is a having condition mode operator with null streamID
-//            if (siddhiHiveManager.getProcessingLevel() == ProcessingLevel.SELECTOR_HAVING){
-//
-//            }
-//
-//            if(variableName == null)
-//                variableName = variable.getAttributeName(); //This for safety. sort of Hack
-//
-//        }
-
         return variableName;
     }
 
+	/**
+	 *Obtain the operator to be substituted for hive script
+	 * @param operator Conditional operator
+	 * @return  Corresponding operator
+	 */
     public String getOperator(Condition.Operator operator) {
-
 
         if (operator == Condition.Operator.EQUAL)
             return " = ";
@@ -240,11 +178,6 @@ public class ConditionHandler {
             return " <= ";
         else if (operator == Condition.Operator.CONTAINS)
             return " CONTAINS ";
-
-
-//        else if(operator == Condition.Operator.INSTANCE_OF)
-//            return " = ";
-
 
         return " ";
     }

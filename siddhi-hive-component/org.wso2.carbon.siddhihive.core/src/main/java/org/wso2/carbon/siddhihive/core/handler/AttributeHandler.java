@@ -1,13 +1,32 @@
+/*
+ *
+ *  *
+ *  *  * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  *  *
+ *  *  * Licensed under the Apache License, Version 2.0 (the "License");
+ *  *  * you may not use this file except in compliance with the License.
+ *  *  * You may obtain a copy of the License at
+ *  *  *
+ *  *  *      http://www.apache.org/licenses/LICENSE-2.0
+ *  *  *
+ *  *  * Unless required by applicable law or agreed to in writing, software
+ *  *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  *  * See the License for the specific language governing permissions and
+ *  *  * limitations under the License.
+ *  *
+ *
+ */
+
 package org.wso2.carbon.siddhihive.core.handler;
 
-import org.wso2.carbon.siddhihive.core.internal.SiddhiHiveManager;
 import org.wso2.siddhi.query.api.expression.Expression;
 import org.wso2.siddhi.query.api.expression.Variable;
 import org.wso2.siddhi.query.api.query.selection.attribute.ComplexAttribute;
 import org.wso2.siddhi.query.api.query.selection.attribute.SimpleAttribute;
 
 /**
- * Created by root on 6/3/14.
+ *  Attributes of siddhi definitions are handled here. Attributes can be either complex or simple
  */
 public class AttributeHandler {
 
@@ -17,37 +36,45 @@ public class AttributeHandler {
         conditionHandler = new ConditionHandler();
     }
 
+	/**
+	 * Simple attribute types are converted to hive guery like select, having , group by, order by etc.
+	 * @param simpleAttribute Siddhi object's simpleAttribute object
+	 * @return Hive expression value for particular simpleAttribute
+	 */
     public String handleSimpleAttribute(SimpleAttribute simpleAttribute) {
-
         String expressionValue = "";
-
         String rename = simpleAttribute.getRename();
 
         Expression expression = simpleAttribute.getExpression();
-
         if (expression instanceof Variable) {
-
             boolean multipleAttr = false;
 
-            if (expressionValue.trim().equalsIgnoreCase("") == false)
-                multipleAttr = true;
+            if (!expressionValue.trim().isEmpty()) {
+	            multipleAttr = true;
+            }
 
             Variable variable = (Variable) expression;
             expressionValue += conditionHandler.handleVariable(variable);
 
-            if (variable.getAttributeName().equals(rename) == false) {
+            if (!variable.getAttributeName().equals(rename)) {
                 expressionValue += " AS " + rename;
             }
 
-            if (multipleAttr)
-                expressionValue += ",";
+            if (multipleAttr) {
+	            expressionValue += ",";
+            }
         }
 
 
         return expressionValue;
     }
 
-
+	/**
+	 * Complex attribute types are converted to hive guery like count(), avg() etc ...
+	 *
+	 * @param complexAttribute Siddhi object's complexAttribute object
+	 * @return Hive expression value for particular complexAttribute
+	 */
     public String handleComplexAttribute(ComplexAttribute complexAttribute) {
 
         String expressionValue = "";
@@ -59,30 +86,27 @@ public class AttributeHandler {
         int expressionLength = expressions.length;
 
         for (int i = 0; i < expressionLength; i++) {
+            Expression expression;
+	        expression = expressions[i];
 
-            Expression expression = expressions[i];
-
-            if (expression instanceof Variable) {
-
+	        if (expression instanceof Variable) {
                 boolean multipleAttr = false;
-
-                if (expressionValue.trim().equalsIgnoreCase("") == false)
-                    multipleAttr = true;
-
+                if (!expressionValue.trim().equalsIgnoreCase("")) {
+	                multipleAttr = true;
+                }
 
                 Variable variable = (Variable) expression;
                 expressionValue += " " + complexAttrName + "( " + conditionHandler.handleVariable(variable) + " )";
 
-                if (variable.getAttributeName().equals(rename) == false) {
+                if (!variable.getAttributeName().equals(rename)) {
                     expressionValue += " AS " + rename;
 
-                    if (multipleAttr)
-                        expressionValue += ",";
+                    if (multipleAttr) {
+	                    expressionValue += ",";
+                    }
                 }
             }
-
         }
-
         return expressionValue;
     }
 

@@ -1,3 +1,23 @@
+/*
+ *
+ *  *
+ *  *  * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  *  *
+ *  *  * Licensed under the Apache License, Version 2.0 (the "License");
+ *  *  * you may not use this file except in compliance with the License.
+ *  *  * You may obtain a copy of the License at
+ *  *  *
+ *  *  *      http://www.apache.org/licenses/LICENSE-2.0
+ *  *  *
+ *  *  * Unless required by applicable law or agreed to in writing, software
+ *  *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  *  * See the License for the specific language governing permissions and
+ *  *  * limitations under the License.
+ *  *
+ *
+ */
+
 package org.wso2.carbon.siddhihive.core.tablecreation;
 
 import org.wso2.carbon.siddhihive.core.utils.Constants;
@@ -5,20 +25,20 @@ import org.wso2.carbon.siddhihive.core.utils.Constants;
 import java.util.regex.Pattern;
 
 /**
- * Created by prasad on 6/10/14.
+ * Table to create cassandra table from SiddhiStreamDefinition and execution plan
  */
+
 public final class CassandraTableCreator extends TableCreatorBase {
-    //**********************************************************************************************
-    private String sCassandraQuery = "";
-    private String sCassandraProperties = "";
+
+	private String sCassandraProperties = "";
     private String sCassandraColumns = "";
 
-    //**********************************************************************************************
+
     public CassandraTableCreator() {
         super();
     }
 
-    //**********************************************************************************************
+
     public String getQuery() {
         if (listColumns.size() <= 0)
             return null;
@@ -26,7 +46,7 @@ public final class CassandraTableCreator extends TableCreatorBase {
         fillHiveFieldString();
         fillCassandraProperties();
 
-        sCassandraQuery = "DROP TABLE IF EXISTS " +  sDBName + " ;\n";
+	    String sCassandraQuery = "DROP TABLE IF EXISTS " + sDBName + " ;\n";
 
         sCassandraQuery += ("CREATE EXTERNAL TABLE IF NOT EXISTS " + sDBName + " (" + sHiveColumns +
                 ") STORED BY \'org.apache.hadoop.hive.cassandra.CassandraStorageHandler\' WITH SERDEPROPERTIES " +
@@ -36,7 +56,7 @@ public final class CassandraTableCreator extends TableCreatorBase {
         return sCassandraQuery;
     }
 
-    //**********************************************************************************************
+
     private void fillCassandraProperties() {
         fillCassandraColumnString();
         String[] streamID = sFullStreamID.split(":");
@@ -45,7 +65,7 @@ public final class CassandraTableCreator extends TableCreatorBase {
                 + "\"cassandra.columns.mapping\" = \""+sCassandraColumns+"\"");
     }
 
-    //**********************************************************************************************
+
     private void fillCassandraColumnString() {
         sCassandraColumns = ":key";
         for (int i=0; i<listColumns.size(); i++) {

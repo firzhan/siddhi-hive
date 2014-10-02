@@ -1,24 +1,42 @@
+/*
+ *
+ *  *
+ *  *  * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  *  *
+ *  *  * Licensed under the Apache License, Version 2.0 (the "License");
+ *  *  * you may not use this file except in compliance with the License.
+ *  *  * You may obtain a copy of the License at
+ *  *  *
+ *  *  *      http://www.apache.org/licenses/LICENSE-2.0
+ *  *  *
+ *  *  * Unless required by applicable law or agreed to in writing, software
+ *  *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  *  * See the License for the specific language governing permissions and
+ *  *  * limitations under the License.
+ *  *
+ *
+ */
+
 package org.wso2.carbon.siddhihive.core.tablecreation;
 
-
+/**
+ * Table to create csv table from SiddhiStreamDefinition and execution plan
+ */
 public final class CSVTableCreator extends TableCreatorBase {
-	//**********************************************************************************************
-    private String sCSVQuery = "";
 
-	
-	//**********************************************************************************************
 	public CSVTableCreator() {
 		super();
     }
 	
-	//**********************************************************************************************
+
 	public String getQuery() {
 		if (listColumns.size() <= 0)
 			return null;
 		
 		fillHiveFieldString();
 
-        sCSVQuery = "DROP TABLE IF EXISTS " +  sDBName + " ;\n";
+		String sCSVQuery = "DROP TABLE IF EXISTS " + sDBName + " ;\n";
 
 		sCSVQuery += ("CREATE TABLE IF NOT EXISTS " + sDBName + " (" + sHiveColumns + ") " +
 				"ROW FORMAT DELIMITED FIELDS TERMINATED BY ','" + " " +  "STORED AS SEQUENCEFILE" + ";");
