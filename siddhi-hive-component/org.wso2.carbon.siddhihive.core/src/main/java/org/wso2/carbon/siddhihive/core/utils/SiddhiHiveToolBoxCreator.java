@@ -121,8 +121,7 @@ public class SiddhiHiveToolBoxCreator {
             bw.close();
 
         } catch (IOException e) {
-            e.printStackTrace();
-	        log.error("File writing operation failed", e);
+            log.error("File writing operation failed", e);
         }
     }
 }

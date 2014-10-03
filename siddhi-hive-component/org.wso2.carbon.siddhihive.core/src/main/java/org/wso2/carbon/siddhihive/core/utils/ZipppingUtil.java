@@ -76,8 +76,7 @@ public class ZipppingUtil {
             zos.close();
             System.out.println("Done");
         } catch (IOException ex) {
-            ex.printStackTrace();
-	        log.error("Toolbox zipping operation failed", ex);
+            log.error("Toolbox zipping operation failed", ex);
         }
     }
 

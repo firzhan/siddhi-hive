@@ -211,8 +211,7 @@ public class SiddhiHiveManager {
 	            try {
 		            streamDefs.add(getOriginalStreamDefinition((StreamDefinitionExt) entry.getValue()));
 	            } catch (SiddhiHiveStreamDefinitionException e) {
-		            e.printStackTrace();
-		            log.error("Obtianing OriginalStreamDefinition failed",e);
+		           log.error("Obtianing OriginalStreamDefinition failed",e);
 	            }
             }
         }
@@ -273,8 +272,7 @@ public class SiddhiHiveManager {
         try {
             streamDefinition = SiddhiHiveValueHolder.getInstance().getEventStreamService().getStreamDefinition(streamId, tenantId);
         } catch (EventStreamConfigurationException e) {
-            e.printStackTrace();
-	        log.error("Error in obtaining Stream Definition",e);
+            log.error("Error in obtaining Stream Definition",e);
 	        throw new SiddhiHiveStreamDefinitionException("Error in obtaining Stream Definition", e);
 	    }catch (Throwable e) {
 	        log.error("Failed to obtain Stream Definition.", e);
