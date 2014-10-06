@@ -23,9 +23,6 @@ package org.wso2.carbon.siddhihive.core.utils;
 import org.wso2.siddhi.query.api.definition.Attribute;
 import org.wso2.siddhi.query.api.query.input.JoinStream;
 
-/**
- * Created by prasad on 6/10/14.
- */
 public class Conversions {
     //**********************************************************************************************
     public static String siddhiToHiveType(Attribute.Type type) {
