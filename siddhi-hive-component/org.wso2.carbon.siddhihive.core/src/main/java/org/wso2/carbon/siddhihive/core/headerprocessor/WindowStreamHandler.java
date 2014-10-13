@@ -24,15 +24,22 @@ import org.wso2.carbon.siddhihive.core.configurations.Context;
 import org.wso2.carbon.siddhihive.core.configurations.StreamDefinitionExt;
 import org.wso2.carbon.siddhihive.core.internal.StateManager;
 import org.wso2.carbon.siddhihive.core.utils.Constants;
+import org.wso2.siddhi.query.api.definition.Attribute;
+import org.wso2.siddhi.query.api.definition.StreamDefinition;
+import org.wso2.siddhi.query.api.expression.Expression;
+import org.wso2.siddhi.query.api.expression.constant.IntConstant;
 import org.wso2.siddhi.query.api.query.input.Stream;
 import org.wso2.siddhi.query.api.query.input.WindowStream;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 /**
  * Class responsible for handling and routing all type of window streams
  */
 public class WindowStreamHandler extends BasicStreamHandler {
+
+    protected WindowStream windowStream;
 
 	public WindowStreamHandler() {
 
@@ -66,5 +73,54 @@ public class WindowStreamHandler extends BasicStreamHandler {
         return null;
     }
 
+
+    /**
+     * Generate Length window select clause
+     *
+     * @return Hive string
+     */
+    protected String generateWindowSelectClause() {
+        StringBuilder paramsBuilder = new StringBuilder(Constants.SELECT);
+        StreamDefinition streamDefinition = windowStream.getStreamDefinition();
+
+        if (streamDefinition != null) {
+            ArrayList<Attribute> attributeArrayList =
+                    (ArrayList<Attribute>) streamDefinition.getAttributeList();
+            String streamID = windowStream.getStreamId();
+            String paramValue = "";
+            for (Attribute attribute : attributeArrayList) {
+
+                if (paramValue.isEmpty()) {
+                    paramValue = "  " + streamID + "." + attribute.getName() + " ";
+                } else {
+                    paramValue = Constants.COMMA + streamID + "." + attribute.getName() + " ";
+                }
+            }
+            paramsBuilder.append(paramValue);
+
+            String commaValue = Constants.COMMA + streamID + "." + Constants.TIMESTAMPS_COLUMN
+                                 + " ";
+            paramsBuilder.append(commaValue);
+        }
+
+        if (paramsBuilder.length() == 0) {
+            paramsBuilder.append(Constants.QUERY_ALL);
+        }
+        return paramsBuilder.toString();
+    }
+
+    /**
+     * Add the order by, time stamp and limit clause to the hive query
+     * @return Query with LImit, Order BY and TIMESTAMP
+     */
+    protected String generateLimitStatement(){
+        Expression expression = windowStream.getWindow().getParameters()[0];
+        IntConstant intConstant = (IntConstant) expression;
+        int length = intConstant.getValue();
+        String orderBy = Constants.ORDER_BY + "  " + windowStream.getStreamId() + "." +
+                         Constants.TIMESTAMPS_COLUMN + "   " + Constants.ASC_ORDER;
+        String limit = Constants.LIMIT_PHRASE + String.valueOf(length);
+        return orderBy + limit;
+    }
 
 }

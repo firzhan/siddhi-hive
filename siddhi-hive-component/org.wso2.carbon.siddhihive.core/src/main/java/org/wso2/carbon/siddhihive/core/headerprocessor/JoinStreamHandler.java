@@ -97,13 +97,14 @@ public class JoinStreamHandler implements StreamHandler {
             context.setReferenceIDAlias(windowStream.getStreamReferenceId(), aliasID);
         }
 
-        String appendingLeftSelectPhrase = "select * from";
+        String appendingLeftSelectPhrase = Constants.SELECT_ALL_PHRASE;
         String appendingRightSelectPhrase;
 
 		// Length batch window query getting appeneded with other string leterals based on the map params
         if(mapLeftStream.get(Constants.LENGTH_BATCH_WIND_FROM_QUERY) != null){
             appendingLeftSelectPhrase = mapLeftStream.get(Constants.FUNCTION_JOIN_LEFT_CALL_PARAM);
-            appendingLeftSelectPhrase = "select *, " + appendingLeftSelectPhrase + "  from";
+            appendingLeftSelectPhrase = Constants.SELECT_ALL_PHRASE + Constants.COMMA +
+                                        appendingLeftSelectPhrase + Constants.FROM;
 
         }
 
@@ -120,42 +121,42 @@ public class JoinStreamHandler implements StreamHandler {
             }
             String s1 = sRightString.substring(0,count+1);
             String s2 = sRightString.substring(count+1,sRightString.length());
-            sRightString =  s1 + " , " + appendingRightSelectPhrase + " " + " as ABC " + s2;
+            sRightString =  s1 +Constants.COMMA + appendingRightSelectPhrase + " " + Constants.HIVE_SCRIPT_ALIAS + s2;
         }
 
-	    String sQuery =
-			    "from (  " + appendingLeftSelectPhrase + " " + sLeftString + " " + sJoin + " " +
-			    sRightString + " ON   (" + sCondition + ")" + " ) " + aliasID;
-	    StateManager.setContext(context);
+        String sQuery = Constants.FROM + Constants.OPENING_BRACT + appendingLeftSelectPhrase + " "
+                        + sLeftString + " " + sJoin + " " + sRightString + Constants.ON_CONDITION +
+                        Constants.OPENING_BRACT  + sCondition + Constants.CLOSING_BRACT +
+                        Constants.CLOSING_BRACT + aliasID;
+        StateManager.setContext(context);
 	    Map<String, String> result = new HashMap<String, String>();
 
 	    //Adding initialization script
-        String leftInitializationScript = mapLeftStream.get(Constants.INITALIZATION_SCRIPT);
-        String rightInitializationScript = mapRightStream.get(Constants.INITALIZATION_SCRIPT);
-        String initializationScript = "";
 
-        if(leftInitializationScript != null) {
-	        initializationScript = leftInitializationScript + "\n";
+        StringBuilder initializationScriptBuilder = new StringBuilder();
+
+        if(mapLeftStream.get(Constants.INITALIZATION_SCRIPT) != null){
+            initializationScriptBuilder.append(mapLeftStream.get(Constants.INITALIZATION_SCRIPT));
+            initializationScriptBuilder.append("\n");
         }
 
-        if(rightInitializationScript != null) {
-	        initializationScript += rightInitializationScript + "\n";
+        if(mapRightStream.get(Constants.INITALIZATION_SCRIPT) != null){
+            initializationScriptBuilder.append(mapRightStream.get(Constants.INITALIZATION_SCRIPT));
+            initializationScriptBuilder.append("\n");
         }
 
-        String incrementalClause = "";
-        String rightIncrementalClause = mapRightStream.get(Constants.INCREMENTAL_CLAUSE);
-        String leftIncrementalClause = mapLeftStream.get(Constants.INCREMENTAL_CLAUSE);
+        StringBuilder incrementalClauseBuilder = new StringBuilder();
 
-        if(leftIncrementalClause != null) {
-	        incrementalClause = leftIncrementalClause + "\n";
+        if(mapRightStream.get(Constants.INCREMENTAL_CLAUSE) != null){
+            incrementalClauseBuilder.append(mapRightStream.get(Constants.INCREMENTAL_CLAUSE));
         }
 
-        if(rightIncrementalClause != null) {
-	        incrementalClause += rightIncrementalClause + "\n";
+        if(mapLeftStream.get(Constants.INCREMENTAL_CLAUSE) != null){
+            incrementalClauseBuilder.append(mapLeftStream.get(Constants.INCREMENTAL_CLAUSE));
         }
 
-        if(!initializationScript.isEmpty()) {
-	        result.put(Constants.INITALIZATION_SCRIPT, initializationScript);
+        if(initializationScriptBuilder.length() > 0) {
+	        result.put(Constants.INITALIZATION_SCRIPT, initializationScriptBuilder.toString());
         }
 
         if(result.get(Constants.LENGTH_WINDOW_BATCH_FREQUENCY) != null) {
@@ -167,8 +168,8 @@ public class JoinStreamHandler implements StreamHandler {
 	        result.put(Constants.LENGTH_WINDOW_FREQUENCY,
 	                   result.get(Constants.LENGTH_WINDOW_FREQUENCY));
         }
-        if((!incrementalClause.isEmpty())) {
-	        result.put(Constants.INCREMENTAL_CLAUSE, incrementalClause);
+        if(incrementalClauseBuilder.length() > 0) {
+	        result.put(Constants.INCREMENTAL_CLAUSE, incrementalClauseBuilder.toString());
         }
         result.put(Constants.JOIN_CLAUSE, sQuery);
         return result;

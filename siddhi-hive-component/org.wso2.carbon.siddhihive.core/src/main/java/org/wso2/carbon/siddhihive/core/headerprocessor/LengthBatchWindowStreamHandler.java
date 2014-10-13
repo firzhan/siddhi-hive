@@ -24,15 +24,12 @@ import org.wso2.carbon.siddhihive.core.configurations.Context;
 import org.wso2.carbon.siddhihive.core.configurations.StreamDefinitionExt;
 import org.wso2.carbon.siddhihive.core.internal.StateManager;
 import org.wso2.carbon.siddhihive.core.utils.Constants;
-import org.wso2.siddhi.query.api.definition.Attribute;
-import org.wso2.siddhi.query.api.definition.StreamDefinition;
 import org.wso2.siddhi.query.api.expression.Expression;
 import org.wso2.siddhi.query.api.expression.constant.IntConstant;
 import org.wso2.siddhi.query.api.query.input.Stream;
 import org.wso2.siddhi.query.api.query.input.WindowStream;
 import org.wso2.siddhi.query.api.query.input.handler.Filter;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,9 +38,7 @@ import java.util.Map;
  */
 public class LengthBatchWindowStreamHandler extends WindowStreamHandler{
 
-    private WindowStream windowStream;
-
-	private String whereClause;
+    private String whereClause;
     private String selectParamsClause;
     private String limitClause;
 
@@ -73,7 +68,7 @@ public class LengthBatchWindowStreamHandler extends WindowStreamHandler{
 			    String.valueOf(Constants.DEFAULT_LENGTH_WINDOW_BATCH_FREQUENCY_TIME);
 	    String initializationScript = generateInitializationScript();
         selectParamsClause = generateWindowSelectClause(); //SELECT     StockExchangeStream.symbol  , StockExchangeStream.price , StockExchangeStream.timestamps
-        limitClause = generateEndingPhrase();
+        limitClause = generateLimitStatement();
         firstSelectClause = generateFirstSelectClause();
         secondSelectClause = generateSecondSelectClause();
         invokeGenerateWhereClause(windowStream.getFilter());
@@ -93,46 +88,7 @@ public class LengthBatchWindowStreamHandler extends WindowStreamHandler{
         return result;
     }
 
-	/**
-	 * Generate Select Clause for length batch windows
-	 * @return Select hive query
-	 */
-    private String generateWindowSelectClause(){
 
-        StreamDefinition streamDefinition = windowStream.getStreamDefinition();
-        String params = "";
-
-	    if(streamDefinition != null){
-	       ArrayList<Attribute> attributeArrayList = (ArrayList<Attribute>) streamDefinition.getAttributeList();
-		   String streamID = windowStream.getStreamId();
-	       for(int i=0; i < attributeArrayList.size(); ++i){
-		        Attribute attribute = attributeArrayList.get(i);
-		       if( params.isEmpty()) {
-			       params += "  " + streamID + "." + attribute.getName() + " ";
-		       }else {
-			       params += " , " + streamID + "." + attribute.getName() + " ";
-		       }
-	       }
-		   params += ", " + streamID + "." + Constants.TIMESTAMPS_COLUMN + "  " ;
-		}
-
-        if(params.isEmpty()) {
-	        params = " * ";
-        }
-        return  Constants.SELECT + "  " + params;
-    }
-
-	/**
-	 * Add the order by, time stamp and limit clause to the hive query
-	 * @return Query with LImit, Order BY and TIMESTAMP
-	 */
-    private String generateEndingPhrase(){
-        Expression expression = windowStream.getWindow().getParameters()[0];
-        IntConstant intConstant = (IntConstant)expression;
-        String orderBY = Constants.ORDER_BY + "  " + windowStream.getStreamId() + "." + Constants.TIMESTAMPS_COLUMN + "   " + "ASC" + "\n";
-        String limit = "LIMIT " +  intConstant.getValue() + "\n";
-        return orderBY + limit ;
-    }
 
 	/**
 	 * This function generates the initialization script for hive variables wiht the updaated row

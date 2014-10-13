@@ -24,15 +24,10 @@ import org.wso2.carbon.siddhihive.core.configurations.Context;
 import org.wso2.carbon.siddhihive.core.configurations.StreamDefinitionExt;
 import org.wso2.carbon.siddhihive.core.internal.StateManager;
 import org.wso2.carbon.siddhihive.core.utils.Constants;
-import org.wso2.siddhi.query.api.definition.Attribute;
-import org.wso2.siddhi.query.api.definition.StreamDefinition;
-import org.wso2.siddhi.query.api.expression.Expression;
-import org.wso2.siddhi.query.api.expression.constant.IntConstant;
 import org.wso2.siddhi.query.api.query.input.Stream;
 import org.wso2.siddhi.query.api.query.input.WindowStream;
 import org.wso2.siddhi.query.api.query.input.handler.Filter;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,14 +37,11 @@ import java.util.Map;
 public class LengthWindowStreamHandler extends WindowStreamHandler {
 
 	private WindowStream windowStream;
-	private Map<String, String> result;
 
-	protected String whereClause;
-	private String selectParamsClause;
-	private String limitClause;
-	private String schedulingFreq;
+    protected String whereClause;
+    private String limitClause;
 
-	private String wndSubQueryIdentifier;
+    private String wndSubQueryIdentifier;
 
 	private String firstSelectClause;
 
@@ -69,17 +61,16 @@ public class LengthWindowStreamHandler extends WindowStreamHandler {
 
 		this.windowStream = (WindowStream) stream;
 
-		schedulingFreq = String.valueOf(Constants.DEFAULT_LENGTH_WINDOW_FREQUENCY_TIME);
+        String schedulingFreq = String.valueOf(Constants.DEFAULT_LENGTH_WINDOW_FREQUENCY_TIME);
 		initializeWndVariables();
-		selectParamsClause =
-				generateWindowSelectClause(); //SELECT     StockExchangeStream.symbol  , StockExchangeStream.price , StockExchangeStream.timestamps
-		limitClause = generateLimitLength();
+        String selectParamsClause = generateWindowSelectClause();
+		limitClause = generateLimitStatement();
 
 		invokeGenerateWhereClause(windowStream.getFilter()); //where   A.symbol   =   "IBM"
 		firstSelectClause = generateFirstSelectClause();
 
 		String fromClause = assembleWindowFromClause();
-		result = new HashMap<String, String>();
+        Map<String, String> result = new HashMap<String, String>();
 		result.put(Constants.LENGTH_WIND_FROM_QUERY, fromClause);
 		result.put(Constants.LENGTH_WINDOW_FREQUENCY, schedulingFreq);
 
@@ -139,55 +130,6 @@ public class LengthWindowStreamHandler extends WindowStreamHandler {
 	}
 
 	/**
-	 * Generate Length window select clause
-	 *
-	 * @return Hive string
-	 */
-	private String generateWindowSelectClause() {
-		String params = "";
-		StreamDefinition streamDefinition = windowStream.getStreamDefinition();
-
-		if (streamDefinition != null) {
-			ArrayList<Attribute> attributeArrayList =
-					(ArrayList<Attribute>) streamDefinition.getAttributeList();
-			String streamID = windowStream.getStreamId();
-			for (int i = 0; i < attributeArrayList.size(); ++i) {
-				Attribute attribute = attributeArrayList.get(i);
-
-				if (params.isEmpty()) {
-					params += "  " + streamID + "." + attribute.getName() + " ";
-				} else {
-					params += " , " + streamID + "." + attribute.getName() + " ";
-				}
-			}
-			params += ", " + streamID + "." + Constants.TIMESTAMPS_COLUMN + " ";
-		}
-
-		if (params.isEmpty()) {
-			params = " * ";
-		}
-		params = Constants.SELECT + "  " + params;
-		return params;
-	}
-
-	/**
-	 * Generate Limit hive querys
-	 *
-	 * @return Hive query with limit, timestamp and order by tags
-	 */
-	private String generateLimitLength() {
-		Expression expression = windowStream.getWindow().getParameters()[0];
-		IntConstant intConstant = (IntConstant) expression;
-		int length = intConstant.getValue();
-
-		String orderBY = Constants.ORDER_BY + "  " + windowStream.getStreamId() + "." +
-		                 Constants.TIMESTAMPS_COLUMN + "   " + "ASC" + "\n";
-		String limit = "LIMIT " + String.valueOf(length) + "\n";
-		return orderBY + limit;
-
-	}
-
-	/**
 	 * Generate Hive Select Query
 	 * @return Hive statement with select part
 	 */
@@ -200,10 +142,10 @@ public class LengthWindowStreamHandler extends WindowStreamHandler {
 			clauseIdentifier = streamReferenceID;
 		}
 
-		return  "SELECT * FROM (" + selectParamsClause + "       " + Constants.FROM + "  " +
-		                       this.windowStream.getStreamId() + "  " + limitClause + ")" +
-		                       clauseIdentifier;
-	}
+		return Constants.SELECT_ALL_FROM_PHRASE + Constants.OPENING_BRACT + Constants.HIVE_SELECT_PARAM_CLAUSE +
+                " " + Constants.HIVE_SELECT_CONSTANT_FROM_CLAUSE + this.windowStream.getStreamId()
+                + "  " + limitClause + " " + Constants.CLOSING_BRACT + " " + clauseIdentifier;
+    }
 
 	/**
 	 * Generate where hive query

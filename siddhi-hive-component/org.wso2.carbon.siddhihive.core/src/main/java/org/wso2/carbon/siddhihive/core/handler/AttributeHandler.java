@@ -20,6 +20,7 @@
 
 package org.wso2.carbon.siddhihive.core.handler;
 
+import org.wso2.carbon.siddhihive.core.utils.Constants;
 import org.wso2.siddhi.query.api.expression.Expression;
 import org.wso2.siddhi.query.api.expression.Variable;
 import org.wso2.siddhi.query.api.query.selection.attribute.ComplexAttribute;
@@ -42,31 +43,31 @@ public class AttributeHandler {
 	 * @return Hive expression value for particular simpleAttribute
 	 */
     public String handleSimpleAttribute(SimpleAttribute simpleAttribute) {
-        String expressionValue = "";
+        StringBuilder expressionValueBuilder = new StringBuilder();
         String rename = simpleAttribute.getRename();
 
         Expression expression = simpleAttribute.getExpression();
         if (expression instanceof Variable) {
             boolean multipleAttr = false;
 
-            if (!expressionValue.trim().isEmpty()) {
-	            multipleAttr = true;
+            if (!rename.trim().isEmpty()) {
+                multipleAttr = true;
             }
 
             Variable variable = (Variable) expression;
-            expressionValue += conditionHandler.handleVariable(variable);
+            expressionValueBuilder.append(conditionHandler.handleVariable(variable));
 
             if (!variable.getAttributeName().equals(rename)) {
-                expressionValue += " AS " + rename;
+                expressionValueBuilder.append(Constants.QUERY_AS + rename);
             }
 
             if (multipleAttr) {
-	            expressionValue += ",";
+                expressionValueBuilder.append(Constants.COMMA);
             }
         }
 
 
-        return expressionValue;
+        return expressionValueBuilder.toString();
     }
 
 	/**
@@ -76,8 +77,7 @@ public class AttributeHandler {
 	 * @return Hive expression value for particular complexAttribute
 	 */
     public String handleComplexAttribute(ComplexAttribute complexAttribute) {
-
-        String expressionValue = "";
+        StringBuilder expressionValueBuilder = new StringBuilder();
         String rename = complexAttribute.getRename();
         String complexAttrName = complexAttribute.getAttributeName();
 
@@ -87,27 +87,28 @@ public class AttributeHandler {
 
         for (int i = 0; i < expressionLength; i++) {
             Expression expression;
-	        expression = expressions[i];
+            expression = expressions[i];
 
-	        if (expression instanceof Variable) {
+            if (expression instanceof Variable) {
                 boolean multipleAttr = false;
-                if (!expressionValue.trim().equalsIgnoreCase("")) {
-	                multipleAttr = true;
+                if (expressionValueBuilder.length() > 0) {
+                    multipleAttr = true;
                 }
 
                 Variable variable = (Variable) expression;
-                expressionValue += " " + complexAttrName + "( " + conditionHandler.handleVariable(variable) + " )";
+                expressionValueBuilder.append(" " + complexAttrName + Constants.OPENING_BRACT +
+                        conditionHandler.handleVariable(variable) + Constants.CLOSING_BRACT);
 
                 if (!variable.getAttributeName().equals(rename)) {
-                    expressionValue += " AS " + rename;
+                    expressionValueBuilder.append(Constants.QUERY_AS + " " + rename);
 
                     if (multipleAttr) {
-	                    expressionValue += ",";
+                        expressionValueBuilder.append(Constants.COMMA);
                     }
                 }
             }
         }
-        return expressionValue;
+        return expressionValueBuilder.toString();
     }
 
 }

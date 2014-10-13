@@ -48,27 +48,35 @@ public class ConditionHandler {
 	 * @return          Condition Hive script
 	 */
     public String processCondition(Condition condition) {
-        String handleCondition = " ";
-
+        String handleCondition;
+        StringBuilder handleConditionBuilder = new StringBuilder();
         if (condition == null) {
 	        return " ";
         }
 
         if (condition instanceof Compare) {
-            handleCondition += handleCompareCondition((Compare) condition);
+            handleConditionBuilder.append(handleCompareCondition((Compare) condition));
         } else if (condition instanceof AndCondition) {
             String leftCondition = processCondition(((AndCondition) condition).getLeftCondition());
             String rightCondition = processCondition(((AndCondition) condition).getRightCondition());
-            handleCondition += Constants.SPACE + Constants.OPENING_BRACT + leftCondition + Constants.CLOSING_BRACT + Constants.SPACE + Constants.AND + Constants.SPACE + Constants.OPENING_BRACT + rightCondition + Constants.CLOSING_BRACT + Constants.SPACE;
+            handleCondition = Constants.SPACE + Constants.OPENING_BRACT + leftCondition
+                    + Constants.CLOSING_BRACT + Constants.SPACE + Constants.AND + Constants.SPACE +
+                    Constants.OPENING_BRACT + rightCondition + Constants.CLOSING_BRACT +
+                    Constants.SPACE;
+            handleConditionBuilder.append(handleCondition);
         } else if (condition instanceof BooleanCondition) {
             processCondition(condition);
         } else if (condition instanceof OrCondition) {
             String leftCondition = processCondition(((OrCondition) condition).getLeftCondition());
             String rightCondition = processCondition(((OrCondition) condition).getRightCondition());
-            handleCondition += Constants.SPACE + Constants.OPENING_BRACT + leftCondition + Constants.CLOSING_BRACT + Constants.SPACE + Constants.OR + Constants.SPACE + Constants.OPENING_BRACT + rightCondition + Constants.CLOSING_BRACT + Constants.SPACE;
+            handleCondition = Constants.SPACE + Constants.OPENING_BRACT + leftCondition
+                    + Constants.CLOSING_BRACT + Constants.SPACE + Constants.OR + Constants.SPACE +
+                    Constants.OPENING_BRACT + rightCondition + Constants.CLOSING_BRACT +
+                    Constants.SPACE;
+            handleConditionBuilder.append(handleCondition);
         }
 
-        return handleCondition;
+        return handleConditionBuilder.toString();
 
     }
 
@@ -81,7 +89,6 @@ public class ConditionHandler {
         String leftExpressiveValue = handleCompareExpression(compare.getLeftExpression());
         String rightExpressiveValue = handleCompareExpression(compare.getRightExpression());
         String operatorString = getOperator(compare.getOperator());
-
         return " " + leftExpressiveValue + "  " + operatorString + "  " + rightExpressiveValue;
     }
 
@@ -92,37 +99,36 @@ public class ConditionHandler {
 	 */
 
     public String handleCompareExpression(Expression expression) {
-        String expressionValue = " ";
+        StringBuilder expressionValueBuilder = new StringBuilder();
 
         if (expression instanceof Variable) {
-            expressionValue = handleVariable((Variable) expression);
+            expressionValueBuilder.append( handleVariable((Variable) expression));
         } else if (expression instanceof Multiply) {
             Multiply multiply = (Multiply) expression;
-            expressionValue = handleCompareExpression(multiply.getLeftValue());
-            expressionValue += " * ";
-            expressionValue += handleCompareExpression(multiply.getRightValue());
-            // expressionValue = ((Multiply)expression.getStreamId() != null ? (variable.getStreamId() + ".") : "") + variable.getAttributeName();
+            expressionValueBuilder.append(handleCompareExpression(multiply.getLeftValue()));
+            expressionValueBuilder.append(Constants.QUERY_ALL);
+            expressionValueBuilder.append( handleCompareExpression(multiply.getRightValue()));
         } else if (expression instanceof Constant) {
 
             if (expression instanceof IntConstant) {
                 IntConstant intConstant = (IntConstant) expression;
-                expressionValue = intConstant.getValue().toString();
+                expressionValueBuilder.append(intConstant.getValue().toString());
             } else if (expression instanceof DoubleConstant) {
                 DoubleConstant doubleConstant = (DoubleConstant) expression;
-                expressionValue = doubleConstant.getValue().toString();
+                expressionValueBuilder.append(doubleConstant.getValue().toString());
             } else if (expression instanceof FloatConstant) {
                 FloatConstant floatConstant = (FloatConstant) expression;
-                expressionValue = floatConstant.getValue().toString();
+                expressionValueBuilder.append(floatConstant.getValue().toString());
             } else if (expression instanceof LongConstant) {
                 LongConstant longConstant = (LongConstant) expression;
-                expressionValue = longConstant.getValue().toString();
+                expressionValueBuilder.append((longConstant.getValue().toString()));
             }else if (expression instanceof StringConstant) {
                 StringConstant stringConstant = (StringConstant) expression;
-                expressionValue = "\""+ stringConstant.getValue() + "\" ";
+                expressionValueBuilder.append(stringConstant.getValue());
             }
         }
 
-        return expressionValue;
+        return expressionValueBuilder.toString();
     }
 
 	/**
@@ -165,19 +171,19 @@ public class ConditionHandler {
     public String getOperator(Condition.Operator operator) {
 
         if (operator == Condition.Operator.EQUAL)
-            return " = ";
+            return Constants.EQUAL_OPERATOR;
         else if (operator == Condition.Operator.NOT_EQUAL)
-            return " != ";
+            return Constants.NOT_EQUAL_OPERATOR;
         else if (operator == Condition.Operator.GREATER_THAN)
-            return " > ";
+            return Constants.GREATER_THAN_OPERATOR;
         else if (operator == Condition.Operator.GREATER_THAN_EQUAL)
-            return " >= ";
+            return Constants.GREATER_THAN_EQUAL_OPERATOR;
         else if (operator == Condition.Operator.LESS_THAN)
-            return " < ";
+            return Constants.LESS_THAN_OPERATOR;
         else if (operator == Condition.Operator.LESS_THAN_EQUAL)
-            return " <= ";
+            return Constants.LESS_THAN_EQUAL_OPERATOR;
         else if (operator == Condition.Operator.CONTAINS)
-            return " CONTAINS ";
+            return Constants.CONTAINS_OPERATOR;
 
         return " ";
     }

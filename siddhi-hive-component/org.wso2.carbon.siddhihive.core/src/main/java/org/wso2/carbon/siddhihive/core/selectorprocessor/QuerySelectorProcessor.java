@@ -53,24 +53,25 @@ public class QuerySelectorProcessor {
     private ConcurrentMap<String, String> selectorQueryMap = null;
     private List<SimpleAttribute> simpleAttributeList = null;
 
-	public QuerySelectorProcessor() {
+    public QuerySelectorProcessor() {
 
         conditionHandler = new ConditionHandler();
         attributeHandler = new AttributeHandler();
 
         selectorQueryMap = new ConcurrentHashMap<String, String>();
         simpleAttributeList = new ArrayList<SimpleAttribute>();
-	}
+    }
 
-	/**
-	 * Initiates handling Selector part of Query Object
-	 * @param selector Selector object
-	 * @return    true in the event of successful completion of selector conversion to siddhi
-	 */
+    /**
+     * Initiates handling Selector part of Query Object
+     *
+     * @param selector Selector object
+     * @return true in the event of successful completion of selector conversion to siddhi
+     */
     public boolean handleSelector(Selector selector) {
 
         if (selector == null) {
-	        return false;
+            return false;
         }
 
         selectorQueryMap.clear();
@@ -95,12 +96,12 @@ public class QuerySelectorProcessor {
         return selectorQueryMap;
     }
 
-	/**
-	 * Handles and decouples the both Complex and Simple attributes.
-	 *
-	 * @param selector Selector object
-	 * @return Eventual hive string
-	 */
+    /**
+     * Handles and decouples the both Complex and Simple attributes.
+     *
+     * @param selector Selector object
+     * @return Eventual hive string
+     */
     private String handleSelectionList(Selector selector) {
 
         Context context = StateManager.getContext();
@@ -112,11 +113,10 @@ public class QuerySelectorProcessor {
         int selectionListSize = selectionList.size();
 
         if (selectionListSize == 0) {
-	        return " ";
+            return " ";
         }
 
-        String selectionString = " ";
-
+        StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < selectionListSize; i++) {
 
             OutputAttribute outputAttribute = selectionList.get(i);
@@ -124,46 +124,48 @@ public class QuerySelectorProcessor {
             postProcessAttributes(outputAttribute);
 
             if (outputAttribute instanceof SimpleAttribute) {
-                selectionString += attributeHandler.handleSimpleAttribute((SimpleAttribute) outputAttribute);
+                stringBuilder.append(attributeHandler.
+                        handleSimpleAttribute((SimpleAttribute) outputAttribute));
             } else if (outputAttribute instanceof ComplexAttribute) {
-                selectionString += attributeHandler.handleComplexAttribute((ComplexAttribute) outputAttribute);
+                stringBuilder.append(attributeHandler.
+                        handleComplexAttribute((ComplexAttribute) outputAttribute));
             }
 
             if ((selectionListSize > 1) && ((i + 1) < selectionListSize))
-                selectionString += " , ";
+                stringBuilder.append(Constants.COMMA);
         }
-        return selectionString + ", timestamps";
+        return stringBuilder.append(Constants.TIMESTAMPS_COLUMN).toString();
     }
 
-    private void postProcessAttributes(OutputAttribute outputAttribute){
+    private void postProcessAttributes(OutputAttribute outputAttribute) {
 
-        if(outputAttribute instanceof SimpleAttribute){
+        if (outputAttribute instanceof SimpleAttribute) {
             simpleAttributeList.add((SimpleAttribute) outputAttribute);
 
-            String selectionString = attributeHandler.handleSimpleAttribute((SimpleAttribute) outputAttribute);
-
+            String selectionString = attributeHandler.
+                    handleSimpleAttribute((SimpleAttribute) outputAttribute);
             Context context = StateManager.getContext();
             context.addSelectionAttributeRename(outputAttribute.getRename(), selectionString);
             StateManager.setContext(context);
-      }
+        }
     }
 
-	/**
-	 * Handles group by operation
-	 *
-	 * @param selector  Selector object
-	 * @return         Group by hive script
-	 */
+    /**
+     * Handles group by operation
+     *
+     * @param selector Selector object
+     * @return Group by hive script
+     */
     private String handleGroupByList(Selector selector) {
 
         Context context = StateManager.getContext();
         context.setSelectorProcessingLevel(SelectorProcessingLevel.GROUPBY);
         StateManager.setContext(context);
 
-        if( selector.getGroupByList().size() == 0) {
-	        return "";
+        if (selector.getGroupByList().size() == 0) {
+            return "";
         }
-        String groupBy = " GROUP BY ";
+        StringBuilder stringBuilder = new StringBuilder(Constants.GROUP_BY);
 
         int groupByListSize = simpleAttributeList.size();
 
@@ -172,42 +174,44 @@ public class QuerySelectorProcessor {
             Expression expression = simpleAttribute.getExpression();
 
             if (expression instanceof Variable) {
-                groupBy += "  " + conditionHandler.handleVariable((Variable)expression);
+                stringBuilder.append(" ").append(conditionHandler.
+                        handleVariable((Variable) expression));
 
-                if ((groupByListSize > 1) && ((i + 1) < groupByListSize))
-                    groupBy += " , ";
+                if ((groupByListSize > 1) && ((i + 1) < groupByListSize)) {
+                    stringBuilder.append(Constants.COMMA);
+                }
             }
         }
-        return groupBy + ", " + Constants.TIMESTAMPS_COLUMN;
+        return stringBuilder.append(Constants.TIMESTAMPS_COLUMN).toString();
     }
 
-	/**
-	 * Handles havings operation
-	 *
-	 * @param selector  Selector object
-	 * @return         Group by hive script
-	 */
+    /**
+     * Handles havings operation
+     *
+     * @param selector Selector object
+     * @return Group by hive script
+     */
     private String handleHavingCondition(Selector selector) {
 
-        String handleCondition;
+        //String handleCondition;
+        StringBuilder handleConditionBuffer = new StringBuilder(Constants.HAVING);
         Condition condition = selector.getHavingCondition();
 
         if (condition == null) {
-	        return " ";
+            return " ";
         }
 
         Context context = StateManager.getContext();
         context.setSelectorProcessingLevel(SelectorProcessingLevel.HAVING);
         StateManager.setContext(context);
 
-        handleCondition = conditionHandler.processCondition(condition);
+        handleConditionBuffer.append(Constants.OPENING_BRACT + Constants.SPACE);
+        handleConditionBuffer.append(conditionHandler.processCondition(condition));
 
         if ((condition instanceof OrCondition) || (condition instanceof AndCondition)) {
-	        handleCondition =
-			        Constants.OPENING_BRACT + Constants.SPACE + handleCondition + Constants.SPACE +
-			        Constants.CLOSING_BRACT;
+            handleConditionBuffer.append(Constants.SPACE + Constants.CLOSING_BRACT);
         }
 
-        return Constants.HAVING + handleCondition;
+        return handleConditionBuffer.toString();
     }
 }

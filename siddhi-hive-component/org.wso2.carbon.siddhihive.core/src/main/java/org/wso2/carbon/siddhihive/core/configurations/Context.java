@@ -20,6 +20,7 @@
 
 package org.wso2.carbon.siddhihive.core.configurations;
 
+import org.wso2.carbon.siddhihive.core.utils.Constants;
 import org.wso2.carbon.siddhihive.core.utils.enums.ProcessingLevel;
 import org.wso2.carbon.siddhihive.core.utils.enums.SelectorProcessingLevel;
 
@@ -64,11 +65,13 @@ public class Context {
 	 *          on another place these variables can be used to represent that particular query.
 	 */
     public String generateSubQueryIdentifier(){
-        return  "subq" + String.valueOf(++subQueryCounter);
+        return  new StringBuilder( Constants.SUB_Q_NUMBER + String.valueOf(++subQueryCounter) ).
+                toString();
     }
 
     public String generatePreviousSubQueryIdentifier(){
-        return "subq" + String.valueOf(subQueryCounter - 1);
+        return  new StringBuilder( Constants.SUB_Q_NUMBER + String.valueOf(subQueryCounter - 1)).
+                toString();
     }
 
     public String getSelectionAttributeRename(String rename) {

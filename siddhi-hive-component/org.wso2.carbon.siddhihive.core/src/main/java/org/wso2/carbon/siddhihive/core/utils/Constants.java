@@ -72,6 +72,7 @@ public final class Constants {
     public static final String OPENING_BRACT = " ( ";
     public static final String CLOSING_BRACT = " ) ";
     public static final String SPACE = "  ";
+    public static final String COMMA = " , ";
 
     public static final String SELECTION_QUERY = "selectionQuery";
     public static final String GROUP_BY_QUERY = "groupByQuery";
@@ -124,4 +125,29 @@ public final class Constants {
     public static final String INITIALIZATION_STATEMENT = ANALYZER_STRING + "\n" + HIVE_AUX_JAR + "\n" + TEMP_FUNCTION + "\n" + EXECUTION_INITIALIZER + "\n";
     public static final String EXECUTION_FINALIZER  ="class org.wso2.siddhihive.analytics.ScriptExecutionFinalizer";
     public static final String CRON = "cron";
+
+    public static final String GROUP_BY = " GROUP BY ";
+    public static final String SUB_Q_NUMBER = "subq";
+    public static final String QUERY_AS = " AS ";
+    public static final String QUERY_ALL = " * ";
+    public static final String ASC_ORDER = " ASC ";
+    public static final String LIMIT_PHRASE = " LIMIT ";
+    public static final String SELECT_ALL_FROM_PHRASE = " SELECT * FROM  ";
+    public static final String SELECT_ALL_PHRASE = " SELECT * ";
+    public static final String ON_CONDITION = "ON";
+
+    //Hive constants
+    public static final String HIVE_SELECT_PARAM_CLAUSE = " selectParamsClause  ";
+    public static final String HIVE_SCRIPT_ALIAS = " as ABC";
+    public static final String HIVE_SELECT_CONSTANT_FROM_CLAUSE = " Constants.FROM  ";
+
+
+
+    public static final String EQUAL_OPERATOR = " = ";
+    public static final String NOT_EQUAL_OPERATOR = " != ";
+    public static final String GREATER_THAN_OPERATOR = " > ";
+    public static final String GREATER_THAN_EQUAL_OPERATOR = " >= ";
+    public static final String LESS_THAN_OPERATOR = " < ";
+    public static final String LESS_THAN_EQUAL_OPERATOR = " <= ";
+    public static final String CONTAINS_OPERATOR = " CONTAINS ";
 }
